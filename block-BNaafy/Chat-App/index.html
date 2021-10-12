@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="m-20">
+  <section class="w-2/3 bg-gray-200 mx-auto border p-10" id="container">
+    <div id="error-container" class="text-red-500 mb-10 text-center"></div>
+    <input id="name" type="text" name="name" value="" placeholder="Enter your name!" class="p-2 rounded">
+    <button type="button" name="button" onclick="setUsername()" class="px-3 py-2 rounded bg-gray-700 text-white font-bold ml-10">Start chatting!</button>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+    function setUsername() {
+      socket.emit('setUsername', document.getElementById('name').value);
+    };
+    var user;
+    socket.on('userExists', function (data) {
+      document.getElementById('error-container').innerHTML = data;
+    });
+    socket.on('userSet', function (data) {
+      user = data.username;
+      document.getElementById('container').innerHTML = `<h1 class="text-center text-lg font-bold mb-10 text-blue-800">Welcome ${user}! Happy Chatting! </h1>\
+      <input type="text" id="message" class="p-2 rounded" placeholder="Write Message">\
+         <button type="button" name="button" onclick="sendMessage()" class="px-3 py-2 rounded bg-gray-700 text-white font-bold ml-10">Send</button>\
+         <div id="message-container" class="mt-10 text-green-800"></div>`;
+    });
+    function sendMessage() {
+      var msg = document.getElementById('message').value;
+      if (msg) {
+        socket.emit('msg', { message: msg, user: user });
+      }
+    }
+    socket.on('newmsg', function (data) {
+      if (user) {
+        document.getElementById('message-container').innerHTML += '<p class="mt-5 text-green-800"><b>' + data.user + '</b>: ' + data.message + '</p>'
+        document.getElementById('message').innerText = '';
+      }
+    })
+
+  </script>
+
+</body>
+
+</html>
